@@ -399,6 +399,8 @@ def investigate_error_vs_condition_number(base_matrix, vector, condition_numbers
     plt.show()
 
 
+# to make the code use the acutal HHL keep it in this location
+
 
 # Example usage:
 if __name__ == "__main__":
@@ -419,7 +421,7 @@ if __name__ == "__main__":
     # Create matrix circuit quantum instance
     tridi_mat = TridiagonalToeplitz(NUM_QUBITS, a, b)
     # Tridiagonal Toeplitz HHL
-    tridi_hhl = HHL(epsilon=0.01, reciprocal=True)
+    tridi_hhl = HHL()
     tridi_solution = tridi_hhl.solve(tridi_mat, vector)
     
     tridi_sol_vec = get_solution_vector(tridi_solution, tridi_solution.state.num_qubits, vector)
