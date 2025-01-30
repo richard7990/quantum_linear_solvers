@@ -295,12 +295,14 @@ class TridiagonalToeplitz(LinearSystemMatrix):
         """
         theta *= self.main_diag
         qc = QuantumCircuit(self.num_state_qubits, name="main_diag")
+        # Encode the phase shift in the qubit both the 1 and 0 state 
         qc.x(0)
         qc.p(theta, 0)
         qc.x(0)
         qc.p(theta, 0)
 
         # pylint: disable=unused-argument
+        # Implment control for the circuit this is to be used in the full version as the ancilla
         def control(num_ctrl_qubits=1, label=None, ctrl_state=None):
             qc_control = QuantumCircuit(self.num_state_qubits + 1, name="main_diag")
             qc_control.p(theta, 0)
@@ -310,7 +312,7 @@ class TridiagonalToeplitz(LinearSystemMatrix):
         return qc
 
     def _off_diag_circ(self, theta: float = 1) -> QuantumCircuit:
-        """Circuit implementing the matrix consisting of entries in the off diagonals.
+        """Circuit implementing the exponentiated matrix consisting of entries in the off diagonals. 
 
         Args:
             theta: Scale factor for the off diagonal entries (e.g. evolution_time/trotter_steps).

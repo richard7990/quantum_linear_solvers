@@ -214,6 +214,7 @@ class HHL(LinearSolver):
         na = qc.num_ancillas
 
         # Create the Operators Zero and One
+        # These will be the projectors for the norm observable onto the classial basis
         zero_op = (I + Z) / 2
         one_op = (I - Z) / 2
 
@@ -458,6 +459,7 @@ class HHL(LinearSolver):
         ql = QuantumRegister(nl)  # eigenvalue evaluation qubits
         if na > 0:
             qa = AncillaRegister(na)  # ancilla qubits
+            
         qf = QuantumRegister(nf)  # flag qubits
 
         if na > 0:
@@ -467,6 +469,7 @@ class HHL(LinearSolver):
 
         # State preparation
         qc.append(vector_circuit, qb[:])
+        
         # QPE
         phase_estimation = PhaseEstimation(nl, matrix_circuit)
         if na > 0:
@@ -475,6 +478,7 @@ class HHL(LinearSolver):
             )
         else:
             qc.append(phase_estimation, ql[:] + qb[:])
+            
         # Conditioned rotation
         if self._exact_reciprocal:
             qc.append(reciprocal_circuit, ql[::-1] + [qf[0]])
@@ -483,6 +487,7 @@ class HHL(LinearSolver):
                 reciprocal_circuit.to_instruction(),
                 ql[:] + [qf[0]] + qa[: reciprocal_circuit.num_ancillas],
             )
+            
         # QPE inverse
         if na > 0:
             qc.append(
@@ -491,6 +496,13 @@ class HHL(LinearSolver):
             )
         else:
             qc.append(phase_estimation.inverse(), ql[:] + qb[:])
+        
+        # Summary
+        print("\n Number of ancilla qubits \n: ", na)
+        print("\n Number of flag qubits \n: ", nf)
+        print("\n Number of clock qubits \n: ", nl)
+        print("\n Number of b qubits \n: ", nb)
+        
         return qc
 
     def solve(
@@ -538,9 +550,11 @@ class HHL(LinearSolver):
                 )
 
         solution = LinearSolverResult()
+        print('hello')
         solution.state = self.construct_circuit(matrix, vector)
         solution.euclidean_norm = self._calculate_norm(solution.state)
 
+        # Here we are calculating the default observable which is chance of algorithm success
         if isinstance(observable, List):
             observable_all, circuit_results_all = [], []
             for obs in observable:
@@ -551,6 +565,8 @@ class HHL(LinearSolver):
                 circuit_results_all.append(circ_results_i)
             solution.observable = observable_all
             solution.circuit_results = circuit_results_all
+        
+        # in the case of a custom observable or observable circuit
         elif observable is not None or observable_circuit is not None:
             solution.observable, solution.circuit_results = self._calculate_observable(
                 solution.state, observable, observable_circuit, post_processing
