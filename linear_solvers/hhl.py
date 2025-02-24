@@ -220,7 +220,7 @@ class HHL(LinearSolver):
 
         # Norm observable
         observable = one_op ^ TensoredOp((nl + na) * [zero_op]) ^ (I ^ nb)
-        norm_2 = (~StateFn(observable) @ StateFn(qc)).eval()
+        norm_2 = (~StateFn(observable) @ StateFn(qc)).eval()        
 
         return np.real(np.sqrt(norm_2) / self.scaling)
 
@@ -550,7 +550,6 @@ class HHL(LinearSolver):
                 )
 
         solution = LinearSolverResult()
-        print('hello')
         solution.state = self.construct_circuit(matrix, vector)
         solution.euclidean_norm = self._calculate_norm(solution.state)
 
