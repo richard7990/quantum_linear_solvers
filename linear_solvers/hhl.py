@@ -126,6 +126,8 @@ class HHL(LinearSolver):
         self.quantum_instance = quantum_instance
 
         self._expectation = expectation
+        
+        self._num_qubits = 0
 
         # For now the default reciprocal implementation is exact
         self._exact_reciprocal = True
@@ -160,7 +162,7 @@ class HHL(LinearSolver):
     def scaling(self) -> float:
         """The scaling of the solution vector."""
         return self._scaling
-
+        
     @scaling.setter
     def scaling(self, scaling: float) -> None:
         """Set the new scaling of the solution vector."""
@@ -415,6 +417,7 @@ class HHL(LinearSolver):
             # Update number of ancilla qubits
             na = matrix_circuit.num_ancillas
         else:
+            print("Using the reciprocal approximation.")
             # Calculate breakpoints for the reciprocal approximation
             num_values = 2**nl
             constant = delta
@@ -501,8 +504,7 @@ class HHL(LinearSolver):
         print("\n Number of ancilla qubits \n: ", na)
         print("\n Number of flag qubits \n: ", nf)
         print("\n Number of clock qubits \n: ", nl)
-        print("\n Number of b qubits \n: ", nb)
-        
+        print("\n Number of b qubits \n: ", nb)    
         return qc
 
     def solve(
