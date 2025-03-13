@@ -32,10 +32,10 @@ from qiskit.opflow import (
 )
 from qiskit.providers import Backend
 from qiskit.utils import QuantumInstance
-
 from .linear_solver import LinearSolver, LinearSolverResult
 from .matrices.numpy_matrix import NumPyMatrix
 from .observables.linear_system_observable import LinearSystemObservable
+
 
 
 class HHL(LinearSolver):
@@ -210,6 +210,7 @@ class HHL(LinearSolver):
         Returns:
             The value of the euclidean norm of the solution.
         """
+
         # Calculate the number of qubits
         nb = qc.qregs[0].size
         nl = qc.qregs[1].size
