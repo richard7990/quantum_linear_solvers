@@ -41,6 +41,7 @@ class LinearSolverResult(AlgorithmResult):
         self._circuit_results: Optional[
             Union[complex, List[complex], List[Union[complex, List[complex]]]]
         ] = None
+        self._qasm_results: Optional[float] = None
 
     @property
     def observable(self) -> Union[float, List[float]]:
@@ -74,6 +75,11 @@ class LinearSolverResult(AlgorithmResult):
     def euclidean_norm(self) -> float:
         """return the euclidean norm if the algorithm knows how to calculate it"""
         return self._euclidean_norm
+    
+    @property
+    def qasm_results(self) -> float:
+        """return the euclidean norm if the algorithm knows how to calculate it"""
+        return self._qasm_results
 
     @euclidean_norm.setter
     def euclidean_norm(self, norm: float) -> None:

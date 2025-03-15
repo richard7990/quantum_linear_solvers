@@ -128,6 +128,7 @@ class HHL(LinearSolver):
         self._expectation = expectation
         
         self._num_qubits = 0
+        self._qasm_results = None
 
         # For now the default reciprocal implementation is exact
         self._exact_reciprocal = True
@@ -216,16 +217,40 @@ class HHL(LinearSolver):
         nl = qc.qregs[1].size
         na = qc.num_ancillas
 
-        # Create the Operators Zero and One
-        # These will be the projectors for the norm observable onto the classial basis
-        zero_op = (I + Z) / 2
-        one_op = (I - Z) / 2
+        # # Create the Operators Zero and One
+        # # These will be the projectors for the norm observable onto the classial basis
+        # zero_op = (I + Z) / 2
+        # one_op = (I - Z) / 2
 
-        # Norm observable
-        observable = one_op ^ TensoredOp((nl + na) * [zero_op]) ^ (I ^ nb)
-        norm_2 = (~StateFn(observable) @ StateFn(qc)).eval()        
+        # # Norm observable
+        # observable = one_op ^ TensoredOp((nl + na) * [zero_op]) ^ (I ^ nb)
+        # norm_2 = (~StateFn(observable) @ StateFn(qc)).eval()        
+        
+        
+        ## New
+        meas_circ = qc.copy()
+        meas_circ.measure_all()
+        
+        # Execute the circuit using the QuantumInstance from your sampler.
+        result = self._sampler.quantum_instance.execute(meas_circ)
+        counts = result.get_counts()
+        total_shots = sum(counts.values())
+        success_count = 0
+        
+        
+        for bitstring, count in counts.items():
+            # Extract the part of the bitstring corresponding to the observable.
+            # In this example, we assume that the bitstring is ordered with the most significant bits
+            # corresponding to the measured qubits of the observable.
+            # Here we take the leftmost (nl+na+1) bits.
+            measured_part = bitstring[: (nl + na + 1)]
+            if measured_part[0] == '1' and all(b == '0' for b in measured_part[1:]):
+                success_count += count
 
-        return np.real(np.sqrt(norm_2) / self.scaling)
+        # The probability (norm squared) is estimated as:
+        norm_2 = success_count / total_shots
+
+        return np.real(np.sqrt(norm_2) / self.scaling), counts
 
     def _calculate_observable(
         self,
@@ -502,10 +527,7 @@ class HHL(LinearSolver):
             qc.append(phase_estimation.inverse(), ql[:] + qb[:])
         
         # Summary
-        print("\n Number of ancilla qubits \n: ", na)
-        print("\n Number of flag qubits \n: ", nf)
-        print("\n Number of clock qubits \n: ", nl)
-        print("\n Number of b qubits \n: ", nb)    
+        print("\n Number of ancilla qubits \n: ", na, "\n Number of flag qubits \n: ", nf, "\n Number of clock qubits \n: ", nl, "\n Number of b qubits \n: ", nb)
         return qc
 
     def solve(
@@ -554,8 +576,8 @@ class HHL(LinearSolver):
 
         solution = LinearSolverResult()
         solution.state = self.construct_circuit(matrix, vector)
-        solution.euclidean_norm = self._calculate_norm(solution.state)
-
+        solution.euclidean_norm, solution._qasm_results = self._calculate_norm(solution.state)
+     
         # Here we are calculating the default observable which is chance of algorithm success
         if isinstance(observable, List):
             observable_all, circuit_results_all = [], []
