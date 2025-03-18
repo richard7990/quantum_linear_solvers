@@ -12,6 +12,7 @@
 
 """The HHL algorithm."""
 
+import time
 from typing import Optional, Union, List, Callable, Tuple
 import numpy as np
 
@@ -361,6 +362,7 @@ class HHL(LinearSolver):
             ValueError: If the type of the input matrix is not supported.
         """
         # State preparation circuit - default is qiskit
+        start  = time.time()
         if isinstance(vector, QuantumCircuit):
             nb = vector.num_qubits
             vector_circuit = vector
@@ -373,10 +375,12 @@ class HHL(LinearSolver):
             vector_circuit.isometry(
                 vector / np.linalg.norm(vector), list(range(nb)), None
             )
+        print('Vector Isometry run time', time.time() - start)
 
         # If state preparation is probabilistic the number of qubit flags should increase
         nf = 1
 
+        start = time.time()
         # Hamiltonian simulation circuit - default is Trotterization
         if isinstance(matrix, QuantumCircuit):
             matrix_circuit = matrix
@@ -401,7 +405,8 @@ class HHL(LinearSolver):
             matrix_circuit = NumPyMatrix(matrix, evolution_time=2 * np.pi)
         else:
             raise ValueError(f"Invalid type for matrix: {type(matrix)}.")
-
+        print('Hamiltonian simulation run time', time.time() - start)
+        
         # Set the tolerance for the matrix approximation
         if hasattr(matrix_circuit, "tolerance"):
             matrix_circuit.tolerance = self._epsilon_a
@@ -437,7 +442,8 @@ class HHL(LinearSolver):
         else:
             delta = 1 / (2**nl)
             print("The solution will be calculated up to a scaling factor.")
-
+            
+        start = time.time()
         if self._exact_reciprocal:
             reciprocal_circuit = ExactReciprocal(nl, delta, neg_vals=neg_vals)
             # Update number of ancilla qubits
@@ -483,6 +489,9 @@ class HHL(LinearSolver):
             )
             na = max(matrix_circuit.num_ancillas, reciprocal_circuit.num_ancillas)
 
+
+        print('Exact Reciprocal run time', time.time() - start)
+        
         # Initialise the quantum registers
         qb = QuantumRegister(nb)  # right hand side and solution
         ql = QuantumRegister(nl)  # eigenvalue evaluation qubits
@@ -500,7 +509,9 @@ class HHL(LinearSolver):
         qc.append(vector_circuit, qb[:])
         
         # QPE
+        start = time.time()
         phase_estimation = PhaseEstimation(nl, matrix_circuit)
+        print('QPE run time', time.time() - start)
         if na > 0:
             qc.append(
                 phase_estimation, ql[:] + qb[:] + qa[: matrix_circuit.num_ancillas]
@@ -518,6 +529,7 @@ class HHL(LinearSolver):
             )
             
         # QPE inverse
+        start = time.time()
         if na > 0:
             qc.append(
                 phase_estimation.inverse(),
@@ -525,9 +537,9 @@ class HHL(LinearSolver):
             )
         else:
             qc.append(phase_estimation.inverse(), ql[:] + qb[:])
-        
+        print('IQPE run time', time.time() - start)
         # Summary
-        print("\n Number of ancilla qubits \n: ", na, "\n Number of flag qubits \n: ", nf, "\n Number of clock qubits \n: ", nl, "\n Number of b qubits \n: ", nb)
+        print(" Number of ancilla qubits : ", na, " Number of flag qubits : ", nf, " Number of clock qubits : ", nl, "Number of b qubits : ", nb)
         return qc
 
     def solve(
@@ -576,8 +588,9 @@ class HHL(LinearSolver):
 
         solution = LinearSolverResult()
         solution.state = self.construct_circuit(matrix, vector)
-        solution.euclidean_norm, solution._qasm_results = self._calculate_norm(solution.state)
-     
+        start = time.time()
+        solution.euclidean_norm, solution._qasm_results = 0, 0#self._calculate_norm(solution.state)
+        print('Euclidian norm function run time', time.time() - start)
         # Here we are calculating the default observable which is chance of algorithm success
         if isinstance(observable, List):
             observable_all, circuit_results_all = [], []

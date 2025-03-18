@@ -179,7 +179,7 @@ class TridiagonalToeplitz(LinearSystemMatrix):
                 )
             )
         )
-        print(f"Updated trotter steps to {self.trotter_steps}")
+        #print(f"Updated trotter steps to {self.trotter_steps}")
 
     @property
     def trotter_steps(self) -> int:
