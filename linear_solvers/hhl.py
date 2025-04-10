@@ -250,7 +250,10 @@ class HHL(LinearSolver):
 
         # The probability (norm squared) is estimated as:
         norm_2 = success_count / total_shots
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
         return np.real(np.sqrt(norm_2) / self.scaling), counts
 
     def _calculate_observable(
