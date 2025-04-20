@@ -252,7 +252,7 @@ class HHL(LinearSolver):
         norm_2 = success_count / total_shots
         
         return np.real(np.sqrt(norm_2) / self.scaling), counts
-
+    
     def _calculate_observable(
         self,
         solution: QuantumCircuit,
@@ -589,7 +589,7 @@ class HHL(LinearSolver):
         solution = LinearSolverResult()
         solution.state = self.construct_circuit(matrix, vector)
         start = time.time()
-        solution.euclidean_norm, solution._qasm_results = 0, 0#self._calculate_norm(solution.state)
+        solution.euclidean_norm, solution._qasm_results = self._calculate_norm(solution.state)
         #print('Euclidian norm function run time', time.time() - start)
         # Here we are calculating the default observable which is chance of algorithm success
         if isinstance(observable, List):
